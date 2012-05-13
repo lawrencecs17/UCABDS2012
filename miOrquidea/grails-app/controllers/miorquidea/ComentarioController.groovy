@@ -586,8 +586,8 @@ class ComentarioController {
 	   }
 	   else
 	   {
-		  /*try
-		  {*/
+		  try
+		  {
 			  if(params.email!=null && params.idcomentario!=null)
 			  {
 				  Usuario usuario = null
@@ -618,11 +618,11 @@ class ComentarioController {
 			  {
 				  render  new RespuestaServidor(mensaje:"Datos entradas incompletos ",fecha: new Date(),datos:false) as XML
 			  }
-		  //}
-		  /*catch(Exception)
+		  }
+		  catch(Exception)
 		  {
 			  render  new RespuestaServidor(mensaje:"Ocurrio un error al procesar los datos de entrada ",fecha: new Date(),datos:false) as XML
-		  }*/
+		  }
 	   }
    }
    
@@ -636,7 +636,7 @@ class ComentarioController {
 					String nombreArchivo = request.getFile(params.archivo).getOriginalFilename()
 					miPath.mkdirs()
 					def archivo = request.getFile(params.archivo)
-					archivo.transferTo(new File("C:/Users//miOrquidea/$usuario.nickname/$nombreArchivo"))
+					archivo.transferTo(new File("C:/Users/miOrquidea/$usuario.nickname/$nombreArchivo"))
 					   comentario.adjuntos.add(nombreArchivo)
 					comentario.save()
 					render  comentario.adjuntos as XML
