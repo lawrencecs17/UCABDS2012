@@ -628,11 +628,11 @@ class ComentarioController {
    
    def extraerArchivo(Usuario usuario, def comentario)
    {
-	  //try
-	 // {
+	  try
+	  {
 				  if(comentario.autor.id == usuario.id)
 			   {
-					   File miPath = new File("C:/Users/Lawrence/Desktop/miOrquidea/$usuario.nickname")
+					File miPath = new File("C:/miOrquidea/$usuario.nickname")
 					String nombreArchivo = request.getFile(params.archivo).getOriginalFilename()
 					miPath.mkdirs()
 					def archivo = request.getFile(params.archivo)
@@ -646,11 +646,11 @@ class ComentarioController {
 				   render  new RespuestaServidor(mensaje:"Error: Solo puedes adjuntar archivos sobre tus comentarios",fecha: new Date(),datos:false) as XML
 			   }
 		   
-	  //}
-	  //catch(Exception)
-	  //{
-		 // render  new RespuestaServidor(mensaje:"Error al procesar archivo adjunto",fecha: new Date(),datos:false) as XML
-	  //}
+	  }
+	  catch(Exception)
+	  {
+		  render  new RespuestaServidor(mensaje:"Error al procesar archivo adjunto",fecha: new Date(),datos:false) as XML
+	  }
 	   
    }
 }
