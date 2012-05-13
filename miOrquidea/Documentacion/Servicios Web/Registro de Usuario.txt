@@ -1,0 +1,9 @@
+<usuario>
+   <nombre>Lawrence Anthony</nombre>   
+   <apellido>Cermeno Salcedo</apellido>
+   <biografia>Estoy disfrutando de GRAILS</biografia>
+   <email>anthony.salcedo21@gmail.com</email>
+   <nickname>superlawrence1</nickname>   
+   <pais>Venezuela</pais>
+   <password>miPassword</password>
+</usuario>
