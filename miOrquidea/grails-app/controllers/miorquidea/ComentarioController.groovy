@@ -636,7 +636,7 @@ class ComentarioController {
 					String nombreArchivo = request.getFile(params.archivo).getOriginalFilename()
 					miPath.mkdirs()
 					def archivo = request.getFile(params.archivo)
-					archivo.transferTo(new File("C:/Users/Lawrence/Desktop/miOrquidea/$usuario.nickname/$nombreArchivo"))
+					archivo.transferTo(new File("C:/Users//miOrquidea/$usuario.nickname/$nombreArchivo"))
 					   comentario.adjuntos.add(nombreArchivo)
 					comentario.save()
 					render  comentario.adjuntos as XML
