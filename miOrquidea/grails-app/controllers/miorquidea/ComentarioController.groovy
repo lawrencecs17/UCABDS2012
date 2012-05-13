@@ -632,7 +632,7 @@ class ComentarioController {
 	  {
 				  if(comentario.autor.id == usuario.id)
 			   {
-					File miPath = new File("C:/miOrquidea/$usuario.nickname")
+					File miPath = new File("C:/Users/miOrquidea/$usuario.nickname")
 					String nombreArchivo = request.getFile(params.archivo).getOriginalFilename()
 					miPath.mkdirs()
 					def archivo = request.getFile(params.archivo)
