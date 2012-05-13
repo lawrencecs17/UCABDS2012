@@ -16,7 +16,8 @@ import miorquidea.Usuario;
 class Comentario {
 
 	
-
+	static hasMany = [tag:Etiqueta,comentado:Comentario]
+	
 	String mensaje
 	Date fecha
 	Usuario autor
@@ -24,7 +25,7 @@ class Comentario {
 	List<String> adjuntos = new ArrayList<String>()
 	
 	static belongsTo = [comentado:Comentario]
-	static hasMany = [tag:Etiqueta,comentado:Comentario]
+	
 	/**
 	* Restricciones básicas de la clase
 	*/
