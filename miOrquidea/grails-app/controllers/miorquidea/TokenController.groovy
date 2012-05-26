@@ -2,7 +2,7 @@ package miorquidea
 
 import grails.converters.XML
 import org.springframework.web.context.request.RequestContextHolder
-
+import org.apache.commons.logging.*
 
  
 /**
@@ -12,10 +12,12 @@ import org.springframework.web.context.request.RequestContextHolder
  *
  */
 
-class TokenController {	
+class TokenController {
 
-    def index = {
-			redirect(action:"list")				
+	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	
+	def index = {
+			redirect(action:"list")
 		 }
 	
 	/**
@@ -27,7 +29,8 @@ class TokenController {
 	def list = {
 		
 		if(request.method !="GET")
-		{			
+		{
+			log.error ("Peticion no permitida " + request.method + " en list")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
@@ -37,7 +40,8 @@ class TokenController {
 				render Token.list() as XML
 			}
 			else
-			{				
+			{
+				log.error ("No hay recursos encontrados en list")
 				render new RespuestaServidor(mensaje:"No hay recursos encontrados",fecha:new Date(),datos: false) as XML
 			}
 		}
@@ -52,16 +56,16 @@ class TokenController {
 		
 		if(request.method !="POST")
 		{
+			log.error ("Peticion no permitida " + request.method + " en iniciarSesion")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
-		{			
+		{
 			asignarToken(procesarXML())
-		
 		}
 	}
 	/**
-	 * Metodo que realiza la busqueda de un usuario con el 
+	 * Metodo que realiza la busqueda de un usuario con el
 	 * email y password obtenidos del XML
 	 */
 	def procesarXML()
@@ -70,12 +74,13 @@ class TokenController {
 		{
 			def usuario = null
 			def xml = request.XML
-			usuario = Usuario.findByEmailAndPassword(xml.email,xml.password)		
+			usuario = Usuario.findByEmailAndPassword(xml.email,xml.password)
 			return usuario
 			
 		}
 		catch(Exception)
 		{
+			log.error ("Se ha producido una Excepcion al procesar los datos de entrada del cliente")
 			render new RespuestaServidor(mensaje:"Se ha producido una Excepcion al procesar los datos de entrada del cliente",fecha:new Date(),datos: false) as XML
 		}
 	}
@@ -89,24 +94,27 @@ class TokenController {
 			if(usuario.activo)
 			{
 				if(validarToken(usuario))
-				{						
-					usuario.tokens << new Token(fechaCreacion:new Date(),validez: true,usuario:usuario,ip:request.getRemoteAddr(), host: request.getRemoteHost())		
+				{
+					usuario.tokens << new Token(fechaCreacion:new Date(),validez: true,usuario:usuario,ip:request.getRemoteAddr(), host: request.getRemoteHost())
 					usuario.save()
 					render usuario.tokens as XML
 				}
 				else
 				{
+					log.error ("El usuario '" + usuario.nickname + "' ya tiene un token valido asignado en esta ubicacion " + request.getRemoteAddr())
 					render new RespuestaServidor(mensaje:"El usuario ya tiene un token valido asignado en esta ubicacion "+request.getRemoteAddr(), fecha: new Date(), datos:false) as XML
 				}
 			}
 			else
 			{
-				render new RespuestaServidor(mensaje:"El usuario "+usuario.email+" ha desactivado su cuenta", fecha: new Date(), datos:false) as XML				
+				log.error ("El usuario "+usuario.nickname+" ha desactivado su cuenta")
+				render new RespuestaServidor(mensaje:"El usuario "+usuario.email+" ha desactivado su cuenta", fecha: new Date(), datos:false) as XML
 			}
 			
 		}
 		else
 		{
+			log.error ("El Login :" + usuario.nickname + " y/o Password :" + usuario.password + " son invalidos")
 			render new RespuestaServidor(mensaje:"Login y/o Password invalidos",fecha:new Date(),datos: false) as XML
 		}
 	}
@@ -115,56 +123,54 @@ class TokenController {
 	{
 		try
 		{
-			//Usuario user = Usuario.collection.find('email': usuario.email)[0]		
-			
 			if(usuario)
-			{
-				//List<Token> misTokens = usuario.tokens	
-								
-				return Token.unTokenPorIp(usuario, request.getRemoteAddr())				
-				
+			{				
+				return Token.unTokenPorIp(usuario, request.getRemoteAddr())
 			}
 			else
-			{			
+			{
+				log.error ("Email : " + usuario.email + " no registrado en el Sistema")
 				render new RespuestaServidor(mensaje:"Email no registrado en el Sistema", fecha: new Date(), datos:false) as XML
 			}
 		}
 		catch(Exception)
 		{
+			log.error ("Se ha generado una falla de acceso a datos en el sistema")
 			render new RespuestaServidor(mensaje:"Se ha generado una falla de acceso a datos en el sistema", fecha: new Date(), datos:false) as XML
-		}	
+		}
 	}
 	
 	def consultarMiToken()
-	{	
+	{
 		
 		if(request.method !="POST")
 		{
+			log.error ("Peticion no permitida " + request.method + " en consultarMiToken")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
 		{
-			miToken(procesarXML())		
-		}		
-	
+			miToken(procesarXML())
+		}
 	}
 	
 	def miToken(Usuario usuario)
 	{
 		try
-		{			
+		{
 			if(usuario)
-			{							
+			{
 				render usuario.tokens as XML	
-				
 			}
 			else
 			{
+				log.error ("El Login :" + usuario.nickname + " y/o Password :" + usuario.password + " son invalidos")
 				render new RespuestaServidor(mensaje:"Login y/o Password invalidos",fecha:new Date(),datos: false) as XML
 			}
 		}
 		catch(Exception)
 		{
+			log.error ("Se ha producido una Excepcion al procesar los datos de entrada del cliente")
 			render new RespuestaServidor(mensaje:"Se ha producido una Excepcion al procesar los datos de entrada del cliente",fecha:new Date(),datos: false) as XML
 		}
 	}
@@ -180,23 +186,25 @@ class TokenController {
 			{
 				if(usuario.tokens)
 				{
-					Token.anularToken(usuario, request.getRemoteAddr())	
+					Token.anularToken(usuario, request.getRemoteAddr())
 					render usuario.tokens as XML
 				}
 				else
 				{
+					log.error ("El usuario " + usuario.email + " no tiene tokens asignados")
 					render new RespuestaServidor(mensaje:"El usuario "+usuario.email+" no tiene tokens asignados",fecha:new Date(),datos: false) as XML
 				}
 			}
 			else
 			{
+				log.error ("El Login :" + usuario.nickname + " y/o Password :" + usuario.password + " son invalidos")
 				render new RespuestaServidor(mensaje:"Login y/o Password invalidos",fecha:new Date(),datos: false) as XML
-				
 			}
 		}
 		catch(Exception)
 		{
-			render new RespuestaServidor(mensaje:"Se ha producido una Excepcion al procesar los datos de entrada del cliente",fecha:new Date(),datos: false) as XML			
+			log.error ("Se ha producido una Excepcion al procesar los datos de entrada del cliente")
+			render new RespuestaServidor(mensaje:"Se ha producido una Excepcion al procesar los datos de entrada del cliente",fecha:new Date(),datos: false) as XML
 		}
 	}
 	
@@ -206,8 +214,7 @@ class TokenController {
 		def xml = request.XML
 		usuario = Usuario.findByEmail(xml.email)
 		Token.vigenciaToken(usuario, request.getRemoteAddr())
-		render usuario.tokens as XML		
+		render usuario.tokens as XML
 	}
-	
 	
 }

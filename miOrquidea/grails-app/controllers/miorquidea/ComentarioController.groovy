@@ -4,6 +4,7 @@ import grails.converters.XML
 import org.springframework.dao.DataIntegrityViolationException
 import miorquidea.Comentario
 import grails.converters.XML
+import org.apache.commons.logging.*
 import org.springframework.dao.DataIntegrityViolationException
 import miorquidea.Comentario
 import java.io.IOException;
@@ -17,11 +18,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.logging.Log;
 import org.apache.log4j.Logger;
 
-class ComentarioController { 
+class ComentarioController {
 
 	RespuestaServidor respuesta
+	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
 	
 	def index() {
 		redirect(action: "listarTodos")
@@ -30,14 +33,14 @@ class ComentarioController {
 	/**
 	* Metodo encargado de Registrar Comentarios en Persistencia
 	* Debe ser solicitado mediante una peticion POST
-	* ....
 	*/
 	def crearComentario ={
 		
 		if(request.method != "POST")
 		{
+			log.error ("Peticion no permitida " + request.method + " en crearComentario")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 		}
 		else
 		{
@@ -53,8 +56,9 @@ class ComentarioController {
 		
 		if(request.method != "POST")
 		{
+			log.error ("Peticion no permitida " + request.method + " en crearComentado")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 		}
 		else
 		{
@@ -71,34 +75,61 @@ class ComentarioController {
 		{
 			def today= new Date()
 			def xml = request.XML
-			
-			if(Token.tokenValido(Usuario.get(xml.autor.@id.text()), request.getRemoteAddr()))
-			{		
-				if (xml.mensaje.text())
+			def usuario = Usuario.findByNicknameAndActivo(xml.autor.text(), true)
+			if (usuario)
+			{
+				if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 				{
-					def comentarioInstance = new Comentario(mensaje: xml.mensaje.text() , fecha: today )			
+					if (xml.mensaje.text())
+					{
+						def comentarioInstance = new Comentario(mensaje: xml.mensaje.text() , fecha: today )
 				
-					xml.tag.each {
-						comentarioInstance.addToTag(Etiqueta.get(it.etiqueta.@id.text()))
-					}				
-					comentarioInstance.autor = Usuario.get(xml.autor.@id.text())
-					comentarioInstance.principal = true
-					validarComentario(comentarioInstance)	
+						xml.tag.each {
+							def nombreEtiqueta = it.etiqueta.text()
+							def etiqueta = Etiqueta.findByNombre(nombreEtiqueta.toLowerCase())
+							if (etiqueta)
+							{
+								comentarioInstance.addToTag(Etiqueta.get(etiqueta.id))
+							}
+							else
+							{
+								def insertarEtiqueta = new Etiqueta(nombre : nombreEtiqueta.toLowerCase())
+								insertarEtiqueta.save()
+								comentarioInstance.addToTag(Etiqueta.get(insertarEtiqueta.id))
+							}
+						}
+						comentarioInstance.autor = Usuario.get(usuario.id)
+						comentarioInstance.principal = true
+						validarComentario(comentarioInstance)
 			
-					render comentarioInstance as XML
+						render comentarioInstance as XML
+					}
+					else
+					{
+						log.info ("Debe escribir un mensaje")
+						render new RespuestaServidor(mensaje:"Debe escribir un mensaje",
+							fecha:new Date(),datos: false) as XML
+					}
 				}
 				else
-					render new RespuestaServidor(mensaje:"Debe escribir un mensaje",
-						fecha:new Date(),datos: false) as XML
+				{
+					log.info ("El usuario '" + usuario.nickname + "' debe estar logueado")
+					render new RespuestaServidor(mensaje:"Usuario no Logueado",
+							fecha:new Date(),datos: false) as XML
+				}
 			}
 			else
-				render new RespuestaServidor(mensaje:"Usuario no Logueado",
-						fecha:new Date(),datos: false) as XML
+			{
+				log.info ("El usuario '" + usuario.nickname + "' no existe")
+				render new RespuestaServidor(mensaje:"El Usuario no existe",
+					fecha:new Date(),datos: false) as XML
+			}
 		}
-		catch(Exception) 
+		catch(Exception)
 		{
+			log.error ("Error en recepcion de archivo XML en el metodo procesarXmlComentario")
 			render new RespuestaServidor(mensaje:"Error en recepcion de archivo XML en el metodo procesarXmlComentario",
-				     fecha:new Date(),datos: false) as XML
+					 fecha:new Date(),datos: false) as XML
 		}
 	}
 	
@@ -110,48 +141,64 @@ class ComentarioController {
 		try
 		{
 		   def xml = request.XML
-		   def today= new Date()		
+		   def today= new Date()
 		   def comentarioInstance = Comentario.get(xml.comentario.@id.text())
-		   
-		   if(Token.tokenValido(Usuario.get(xml.autorComentado.@id.text()), request.getRemoteAddr()))
+		   def usuario = Usuario.findByNicknameAndActivo(xml.autorComentado.text(), true)
+		   if (usuario)
 		   {
-			   if (xml.mensaje.text())
+			   if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 			   {
-				   if (comentarioInstance.principal == true && Usuario.get(xml.autorComentado.@id.text()))
+				   if (xml.mensaje.text())
 				   {
-					  
-					   def comentadoInstance = new Comentario(mensaje: xml.mensaje.text() , fecha: today )
-					   comentadoInstance.autor = Usuario.get(xml.autorComentado.@id.text())
-					   comentadoInstance.principal == false
-				   
+					   if (comentarioInstance.principal == true && Usuario.get(usuario.id))
+					   {
+						   def comentadoInstance = new Comentario(mensaje: xml.mensaje.text() , fecha: today )
+						   comentadoInstance.autor = Usuario.get(usuario.id)
+						   comentadoInstance.principal == false
 					   
-					   validarComentario(comentadoInstance)
-					   comentarioInstance.addToComentado(comentadoInstance) 
+						   validarComentario(comentadoInstance)
+						   comentarioInstance.addToComentado(comentadoInstance)
 					   
-					   validarComentario(comentarioInstance)
+						   validarComentario(comentarioInstance)
 				
-					   def usuarioPrincipal = Usuario.get(comentarioInstance.autor.id)
-					   def usuarioComentado = Usuario.get(comentadoInstance.autor.id)
+						   def usuarioPrincipal = Usuario.get(comentarioInstance.autor.id)
+						   def usuarioComentado = Usuario.get(comentadoInstance.autor.id)
 
-					   enviarCorreo(usuarioPrincipal.email , usuarioComentado.nickname, comentarioInstance.mensaje)
+						   enviarCorreo(usuarioPrincipal.email , usuarioComentado.nickname, comentarioInstance.mensaje)
 				   
-					   render comentarioInstance as XML  
-					   println "aqui"
+						   render comentadoInstance as XML
+					   }
+					   else
+					   {
+						   log.info ("El usuario '" + usuario.nickname + "'no puede comentar sobre sub-comentarios o es un comentario que no existe")
+							   render new RespuestaServidor(mensaje:"No puede comentar sobre sub-comentarios o es un comentario que no existe",
+							   fecha:new Date(),datos: false) as XML
+					   }
 				   }
 				   else
-			   			render new RespuestaServidor(mensaje:"No puede comentar sobre sub-comentarios o es un comentario que no existe",
+				   {
+					   log.info ("Debe escribir un mensaje")
+						   render new RespuestaServidor(mensaje:"Debe escribir un mensaje",
 							   fecha:new Date(),datos: false) as XML
+				   }
 			   }
 			   else
-		   			render new RespuestaServidor(mensaje:"Debe escribir un mensaje",
-					   fecha:new Date(),datos: false) as XML
+			   {
+				   log.info ("El usuario '" + usuario.nickname + "' debe estar logueado")
+					   render new RespuestaServidor(mensaje:"Usuario no Logueado",
+						   fecha:new Date(),datos: false) as XML
+			   }
 		   }
 		   else
-		   		render new RespuestaServidor(mensaje:"Usuario no Logueado",
-				   fecha:new Date(),datos: false) as XML
+		   {
+			   log.info ("El usuario '" + usuario.nickname + "' no existe")
+				   render new RespuestaServidor(mensaje:"El Usuario no existe",
+					   fecha:new Date(),datos: false) as XML
+		   }
 		}
 		catch(Exception)
-		{			
+		{
+			log.error ("Error en recepcion de archivo XML en el metodo procesarXmlComentado")
 			render new RespuestaServidor(mensaje:"Error en recepcion de archivo XML en el metodo procesarXML Comentado",
 				fecha:new Date(),datos: false) as XML
 		}
@@ -172,12 +219,14 @@ class ComentarioController {
 			}
 			else
 			{
+				log.error ("Error en datos, datos duplicados o formato incorrecto de entrada en validarComentario")
 				 render new RespuestaServidor(mensaje:"Error en datos, datos duplicados o formato incorrecto de entrada",
-				       fecha:new Date(),datos: false) as XML
+					   fecha:new Date(),datos: false) as XML
 			}
 		}
 		catch(Exception)
 		{
+			log.error ("Error en insercion de datos de archivo XML validarComentario")
 			render new RespuestaServidor(mensaje:"Error en insercion de datos de archivo XML validarComentario en persistencia",
 				fecha:new Date(),datos: false) as XML
 		}
@@ -191,8 +240,9 @@ class ComentarioController {
 	{
 		if(request.method != "PUT")
 		{
+			log.error ("Peticion no permitida " + request.method + " en modificarComentario")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 		}
 		else
 		{
@@ -209,39 +259,60 @@ class ComentarioController {
 		{
 			def xml = request.XML
 			def comentario = Comentario.get(xml.idComentario.@id.text())
-			def usuario = Usuario.get(xml.idUsuario.@id.text())
-			def idUSuario = Integer.parseInt(xml.idUsuario.@id.text())
-			
-			if(comentario && usuario)			
+			def usuario = Usuario.findByNicknameAndActivo(xml.usuario.text(), true)
+			if (usuario)
 			{
-				if( xml.mensaje.text())
+				if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 				{
-					if( comentario.autor.id == idUSuario )
+					if(comentario && usuario)
 					{
-						comentario.mensaje = xml.mensaje.text()
-						validarComentario(comentario)
-						render comentario as XML
+						if( xml.mensaje.text())
+						{
+							if( comentario.autor.id == usuario.id )
+							{
+								comentario.mensaje = xml.mensaje.text()
+								validarComentario(comentario)
+								render comentario as XML
+							}
+							else
+							{
+								log.info ("El comentario id=" + xml.idComentario.@id.text() + " le pertenece a otro usuario")
+								render new RespuestaServidor(mensaje:"Este comentario pertenece a otro usuario",
+									fecha:new Date(),datos: false) as XML
+							}
+						}
+						else
+						{
+							log.info ("No puede hacer publicaciones en blanco en el comentario id=" + xml.idComentario.@id.text())
+							render new RespuestaServidor(mensaje:"No puede hacer publicaciones en blanco",
+								fecha:new Date(),datos: false) as XML
+						}
 					}
 					else
 					{
-						 render new RespuestaServidor(mensaje:"Este comentario pertenece a otro usuario",
-							 fecha:new Date(),datos: false) as XML
+						log.info ("No hay recursos encontrados en el comentario id=" + xml.idComentario.@id.text() +
+							" y usuario '" + usuario.nickname + "'")
+						render new RespuestaServidor(mensaje:"No hay recursos encontrados",
+							fecha:new Date(),datos: false) as XML
 					}
 				}
 				else
 				{
-					render new RespuestaServidor(mensaje:"No puede hacer publicaciones en blanco",
+					log.info ("El usuario '" + usuario.nickname + "' debe estar logueado")
+					render new RespuestaServidor(mensaje:"Usuario no Logueado",
 						fecha:new Date(),datos: false) as XML
 				}
 			}
 			else
 			{
-				 render new RespuestaServidor(mensaje:"No hay recursos encontrados",
-					 fecha:new Date(),datos: false) as XML
+				log.info ("El usuario '" + usuario.nickname + "' no existe")
+				render new RespuestaServidor(mensaje:"El Usuario no existe",
+					fecha:new Date(),datos: false) as XML
 			}
 		}
 		catch(Exception)
 		{
+			log.error ("Error en insercion de datos de archivo XML verificarXmlModificar")
 			render new RespuestaServidor(mensaje:"Error en insercion de datos de archivo XML verificarXmlModificar en persistencia",
 				fecha:new Date(),datos: false) as XML
 		}
@@ -256,24 +327,25 @@ class ComentarioController {
    {
 	   if(request.method !="DELETE")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en eliminarComentario")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 	   }
 	   else
 	   {
+		   def usuario = Usuario.findByNicknameAndActivo(xml.usuario.text(), true)
 		   def comentario = Comentario.get(params.idComentario)
-		   //def usuario =  Usuario.get(params.idUsuario)
 		   def comentarioUsuarios = Comentario.findByAutorAndPrincipal(Usuario.get(params.idUsuario), true)
-		  // render comentario as XML
 		   boolean eliminar
-		   if(Token.tokenValido(Usuario.get(params.idUsuario), request.getRemoteAddr()))
+		   if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 		   {
 			   if(comentario)
 			   {
-				   if (comentario.autor.id == params.int('idUsuario'))
+				   if (comentario.autor.id == usuario.id)
 				   {
+					   eliminarCalificacion(params.int('idComentario'))
 					   eliminarComentarioCascada(comentario, params.int('idComentario'))
-					   render comentario as XML 
+					   render comentario as XML
 				   }
 				   else
 				   {
@@ -281,33 +353,41 @@ class ComentarioController {
 						   for ( comentados in it.comentado)
 						   {
 							   if (comentados.id == params.int('idComentario'))
-							   {	 
-						   			eliminar = true
-									   break
+							   {
+									   eliminar = true
+									break
 							   }
 							   else
 									eliminar = false
-						   }				   
+						   }
 					   }
 					   if (eliminar == true )
 					   {
+						   eliminarCalificacion(params.int('idComentario'))
 						   comentario.delete()
 						   render comentario as XML
 					   }
 					   else
-					   		render new RespuestaServidor(mensaje:"Este comentario no le pertenece",
+					   {
+						   log.info ("El comentario id=" + params.idComentario + " le pertenece a otro usuario")
+							   render new RespuestaServidor(mensaje:"Este comentario no le pertenece",
 								   fecha:new Date(),datos: false) as XML
+					   }
 				   }
 			   }
 			   else
 			   {
+				   log.info ("No hay recursos encontrados con el comentario id=" + params.idComentario)
 				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 			   }
 		   }
 		   else
-		   		render new RespuestaServidor(mensaje:"Usuario no Logueado",
+		   {
+			   log.info ("El usuario '" + usuario.nickname + "' debe estar logueado")
+				   render new RespuestaServidor(mensaje:"Usuario no Logueado",
 					   fecha:new Date(),datos: false) as XML
+		   }
 	   }
    }
    
@@ -318,21 +398,47 @@ class ComentarioController {
    {
 	   try
 	   {
-	   comentario.each {
-		   for ( comentados in it.comentado)
-		   {
-			   if (comentados.id == idComentario)
+		   comentario.each {
+			   for ( comentados in it.comentado)
 			   {
-					 def eliminar = Comentario.get(comentados.id) 
+				   if (comentados.id == idComentario)
+				   {
+					 def eliminar = Comentario.get(comentados.id)
 					 eliminar.delete()
+				   }
 			   }
 		   }
-	   }
-	   comentario.delete()
+		   comentario.delete()
 	   }
 	   catch(Exception)
 	   {
-		   render  new RespuestaServidor(mensaje:"problema" + request.method,
+		   log.error ("problema " + request.method + "cascada")
+		   render  new RespuestaServidor(mensaje:"problema " + request.method + "cascada",
+			   fecha: new Date(),datos:false) as XML
+	   }
+   }
+   
+   /**
+   * Metodo encargado eliminar las calificaciones de los comentarios
+   */
+   def eliminarCalificacion(int idComentario)
+   {
+	   try
+	   {
+		   def calificacion = Calificacion.findAllByComentario(Comentario.get(idComentario))
+		   
+		   if (calificacion)
+		   {
+			   calificacion.each{
+				   def eliminar = Calificacion.get(it.id)
+				   eliminar.delete()
+			   }
+		   }
+	   }
+	   catch(Exception)
+	   {
+		   log.error ("problema " + request.method + "calificacion")
+		   render  new RespuestaServidor(mensaje:"problema" + request.method + "calificacion",
 			   fecha: new Date(),datos:false) as XML
 	   }
    }
@@ -345,26 +451,39 @@ class ComentarioController {
 			   
 	   if(request.method !="GET")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en listarPorUsuario")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 	   }
 	   else
 	   {
 		   try
 		   {
-			   def comentario = Comentario.findAllByAutor(Usuario.get(params.idUsuario))
-			   if(comentario)
+			   def usuario = Usuario.findByNicknameAndActivo(params.usuario, true)
+			   if (usuario)
 			   {
-				   render comentario as XML
+				   def comentario = Comentario.findAllByAutor(Usuario.get(usuario.id))
+				   if(comentario)
+				   {
+					   render comentario as XML
+				   }
+				   else
+				   {
+					   log.info ("No hay recursos encontrados con el usuario " + params.usuario)
+					   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
+						   fecha:new Date(),datos: false) as XML
+				   }
 			   }
 			   else
 			   {
-				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
+				   log.info ("El usuario '" + usuario.nickname + "' no existe")
+					   render new RespuestaServidor(mensaje:"El Usuario no existe",
 						   fecha:new Date(),datos: false) as XML
 			   }
 		   }
 		   catch(Exception)
 		   {
+			   log.error ("No hay recursos encontrados en listarPorUsuario")
 			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 		   }
@@ -379,8 +498,9 @@ class ComentarioController {
 			   
 	   if(request.method !="GET")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en listarPorComentario")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 	   }
 	   else
 	   {
@@ -393,12 +513,14 @@ class ComentarioController {
 			   }
 			   else
 			   {
+				   log.info ("No hay recursos encontrados con el comentario id=" + params.idComentario)
 				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 			   }
 		   }
 		   catch(Exception)
 		   {
+			   log.error ("No hay recursos encontrados en listarPorComentario")
 			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 		   }
@@ -413,14 +535,15 @@ class ComentarioController {
 			   
 	   if(request.method !="GET")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en listarPorEtiqueta")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 	   }
 	   else
 	   {
 		   try
-		   {		
-			  def etiqueta = Etiqueta.get(params.idEtiqueta) 
+		   {
+			  def etiqueta = Etiqueta.get(params.idEtiqueta)
 			  def comentario = Comentario.findAll()
 			  List<Comentario> listaComentario = []
 			  comentario.each{
@@ -429,23 +552,25 @@ class ComentarioController {
 					   if ( book.nombre == etiqueta.nombre )
 					   {
 							listaComentario.add(Comentario.get(it.id))
-				       }
+					   }
 				   }
 			   }
 			   
 			   if(listaComentario)
 			   {
 				   render listaComentario as XML
-			       listaComentario.clear()
+				   listaComentario.clear()
 			   }
 			   else
 			   {
+				   log.info ("No hay recursos encontrados en listarPorEtiqueta")
 				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 			   }
 		   }
 		   catch(Exception)
 		   {
+			   log.error ("No hay recursos encontrados en listarPorEtiqueta")
 			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 		   }
@@ -460,8 +585,9 @@ class ComentarioController {
 			   
 	   if(request.method !="GET")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en listarSinEtiqueta")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
-				        fecha: new Date(),datos:false) as XML
+						fecha: new Date(),datos:false) as XML
 	   }
 	   else
 	   {
@@ -471,9 +597,9 @@ class ComentarioController {
 			  List<Comentario> listaComentario = []
 			  comentario.each{
 
-					   if (!it.tag)
+					   if (!it.tag && it.principal == true)
 					   {
-							listaComentario.add(Comentario.get(it.id))
+						   listaComentario.add(Comentario.get(it.id))
 					   }
 			   }
 			   
@@ -484,12 +610,14 @@ class ComentarioController {
 			   }
 			   else
 			   {
+				   log.info ("No hay recursos encontrados en listarSinEtiqueta")
 				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 			   }
 		   }
 		   catch(Exception)
 		   {
+			   log.error ("No hay recursos encontrados en listarSinEtiqueta")
 			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						   fecha:new Date(),datos: false) as XML
 		   }
@@ -504,6 +632,7 @@ class ComentarioController {
 			   
 	   if(request.method !="GET")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en listarTodos")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
 					   fecha: new Date(),datos:false) as XML
 	   }
@@ -515,6 +644,7 @@ class ComentarioController {
 		   }
 		   else
 		   {
+			   log.info ("No hay recursos encontrados en listarTodos")
 			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						  fecha:new Date(),datos: false) as XML
 		   }
@@ -529,6 +659,7 @@ class ComentarioController {
 			   
 	   if(request.method !="GET")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en contarComentados")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
 					   fecha: new Date(),datos:false) as XML
 	   }
@@ -552,6 +683,7 @@ class ComentarioController {
 			   }
 			   else
 			   {
+				   log.info ("Este comentario es un sub-comentario o el comentario no existe")
 				   render new RespuestaServidor(mensaje:"Este comentario es un sub-comentario o el comentario no existe",
 					   fecha:new Date(),datos: false) as XML
 			   }
@@ -559,6 +691,7 @@ class ComentarioController {
 		   }
 		   catch(Exception)
 		   {
+			   log.error ("No hay recursos encontrados en contarComentados")
 			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						  fecha:new Date(),datos: false) as XML
 		   }
@@ -571,17 +704,25 @@ class ComentarioController {
    */
    def enviarCorreo (String email, String nickname, String mensaje)
    {
-	  sendMail{
-		  to email
-		  subject "Notificacion de Mi Orquidea"
-		  body 'El usuario ' + nickname + ' comento su comentario : ' + mensaje
-		  } 
+	   try
+	   {
+		   sendMail{
+			   to email
+			   subject "Notificacion de Mi Orquidea"
+			   body 'El usuario ' + nickname + ' comento su comentario : ' + mensaje
+		  }
+	   }
+	   catch(Exception)
+	   {
+		   log.error ("Problemas al enviar al correo " + email)
+	   }
    }
    
    def uploadFile ={
 	   
 	   if(request.method != "POST")
 	   {
+		   log.error ("Peticion no permitida " + request.method + " en uploadFile")
 		   render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
 					   fecha: new Date(),datos:false) as XML
 	   }
@@ -605,23 +746,27 @@ class ComentarioController {
 					  }
 					  else
 					  {
+						  log.info ("La sesion del usuario '" + usuario.nickname+ "'" + " a expirado")
 						  render  new RespuestaServidor(mensaje:"Su sesion a expirado, debe iniciar sesion para subir el archivo",fecha: new Date(),datos:false) as XML
 					  }
 					 
 				  }
 				  else
 				  {
+					  log.info ("Recurso no encontrado no se puede adjuntar archivo")
 					 render  new RespuestaServidor(mensaje:"Recurso no encontrado no se puede adjuntar archivo ",fecha: new Date(),datos:false) as XML
 				  }
 				  
 			  }
 			  else
 			  {
+				  log.info ("Datos entradas incompletos")
 				  render  new RespuestaServidor(mensaje:"Datos entradas incompletos ",fecha: new Date(),datos:false) as XML
 			  }
 		  }
 		  catch(Exception)
 		  {
+			  log.error ("Ocurrio un error al procesar los datos de entrada")
 			  render  new RespuestaServidor(mensaje:"Ocurrio un error al procesar los datos de entrada ",fecha: new Date(),datos:false) as XML
 		  }
 	   }
@@ -631,28 +776,29 @@ class ComentarioController {
    {
 	  try
 	  {
-				  if(comentario.autor.id == usuario.id)
-			   {
-					File miPath = new File("C:/miOrquidea/$usuario.nickname")
-					String nombreArchivo = request.getFile(params.archivo).getOriginalFilename()
-					miPath.mkdirs()
-					def archivo = request.getFile(params.archivo)
-					archivo.transferTo(new File("C:/miOrquidea/$usuario.nickname/$nombreArchivo"))
-					   comentario.adjuntos.add(nombreArchivo)
-					comentario.save()
-					render  comentario.adjuntos as XML
-			   }
-			   else
-			   {
-				   render  new RespuestaServidor(mensaje:"Error: Solo puedes adjuntar archivos sobre tus comentarios",fecha: new Date(),datos:false) as XML
-			   }
-		   
+			if(comentario.autor.id == usuario.id)
+			{
+				File miPath = new File("C:/miOrquidea/$usuario.nickname")
+				String nombreArchivo = request.getFile(params.archivo).getOriginalFilename()
+				miPath.mkdirs()
+				def archivo = request.getFile(params.archivo)
+				archivo.transferTo(new File("C:/miOrquidea/$usuario.nickname/$nombreArchivo"))
+					  comentario.adjuntos.add(nombreArchivo)
+				comentario.save()
+				render  comentario.adjuntos as XML
+			}
+			else
+			{
+				log.error ("Solo puedes adjuntar archivos sobre tus comentarios")
+				render  new RespuestaServidor(mensaje:"Error: Solo puedes adjuntar archivos sobre tus comentarios",fecha: new Date(),datos:false) as XML
+			}
 	  }
 	  catch(Exception)
 	  {
+		  log.error ("Error al procesar archivo adjunto")
 		  render  new RespuestaServidor(mensaje:"Error al procesar archivo adjunto",fecha: new Date(),datos:false) as XML
 	  }
-	   
    }
+   
 }
 

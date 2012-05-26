@@ -1,12 +1,15 @@
 package miorquidea
+
 import grails.converters.XML
+import org.apache.commons.logging.*
 
-class UsuarioController {	
+class UsuarioController {
 	
+	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
 
-    def index ={
+	def index ={
 		
-		redirect(action:"list") 
+		redirect(action:"list")
 		
 		}
 	
@@ -15,19 +18,21 @@ class UsuarioController {
 	 * Debe ser solicitado mediante una peticion GET
 	 */
 	
-	def list = {			
+	def list = {
 		if(request.method !="GET")
-		{			
+		{
+			log.error ("Peticion no permitida " + request.method + " en list")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
 		{
 			if(Usuario.list())
-			{			
+			{
 				render Usuario.list() as XML
 			}
 			else
 			{
+				log.error ("No hay recursos encontrados en list")
 				render new RespuestaServidor(mensaje:"No hay recursos encontrados",fecha:new Date(),datos: false) as XML
 			}
 		}
@@ -41,15 +46,15 @@ class UsuarioController {
 	def registrarUsuario = {
 		
 		if(request.method != "POST")
-		{	
+		{
+			log.error ("Peticion no permitida " + request.method + " en registrarUsuario")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
-		{	
+		{
 			def usuario = procesarXML()
-			validarRegistro(usuario)				
+			validarRegistro(usuario)
 		}
-		
 	}
 	
 	/**
@@ -61,7 +66,7 @@ class UsuarioController {
 	{
 		try
 		{
-			def usuario = new Usuario()	
+			def usuario = new Usuario()
 			def xml = request.XML
 			usuario.nombre = xml.nombre
 			usuario.apellido = xml.apellido
@@ -71,14 +76,15 @@ class UsuarioController {
 			usuario.fechaRegistro = new Date()
 			usuario.email = xml.email
 			usuario.pais = xml.pais
-			usuario.activo = true			
+			usuario.activo = true
 			return usuario
 		}
 		catch(Exception)
 		{
+			log.error ("Error en recepcion de archivo XML RegistrarUsuario")
 			render "Error en recepcion de archivo XML"
 			return null
-		}		
+		}
 	}
 	
 	/**
@@ -93,19 +99,19 @@ class UsuarioController {
 			if(usuario.save(flush:true))
 			{
 				response.status = 201 // La petición ha sido completada y ha resultado en la creación de un nuevo recurso
-				render usuario as XML				
+				render usuario as XML
 			}
 			else
 			{
-				render new RespuestaServidor(mensaje:"Error en datos de entrada, datos duplicados o formato incorrecto de entrada",fecha:new Date(),datos: false) as XML			
+				log.error ("Error en datos de entrada, datos duplicados o formato incorrecto de entrada validarRegistro")
+				render new RespuestaServidor(mensaje:"Error en datos de entrada, datos duplicados o formato incorrecto de entrada",fecha:new Date(),datos: false) as XML
 			}
 		}
 		catch(Exception)
 		{
+			log.error ("Error en insercion de datos de archivo XML validarRegistro")
 			render "Error en insercion de datos de archivo XML en persistencia"
-			
 		}
-		
 	}
 	
 	/**
@@ -117,10 +123,11 @@ class UsuarioController {
 	{
 		if(request.method !="DELETE")
 		{
+			log.error ("Peticion no permitida " + request.method + " en eliminarUsuario")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
-		{			
+		{
 			Usuario usuario = Usuario.findByEmailAndPassword(params.email,params.password)
 			if(usuario)
 			{
@@ -134,17 +141,20 @@ class UsuarioController {
 					}
 					else
 					{
+						log.error ("El usuario '" + usuario.nickname + "' no ha iniciado sesion, imposible procesar solicitud")
 						render new RespuestaServidor(mensaje:"No ha iniciado sesion, imposible procesar solicitud",fecha:new Date(),datos: false) as XML
 					}
 				}
 				else
 				{
+					log.error ("El usuario '" + usuario.nickname + "' ya ha desactivado su cuenta")
 					render new RespuestaServidor(mensaje:"El usuario "+usuario.email+" ya ha desactivado su cuenta",fecha:new Date(),datos: false) as XML
 				}
 			}
 			else
 			{
-				render new RespuestaServidor(mensaje:"Login y/o password invalidos",fecha:new Date(),datos: false) as XML						
+				log.error ("El Login :" + usuario.nickname + " y/o Password :" + usuario.password + " son invalidos")
+				render new RespuestaServidor(mensaje:"Login y/o password invalidos",fecha:new Date(),datos: false) as XML
 			}
 		}
 	}
@@ -153,11 +163,12 @@ class UsuarioController {
 	{
 		if(request.method !="PUT")
 		{
+			log.error ("Peticion no permitida " + request.method + " en activarUsuario")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
 		{
-			def xml = request.XML			
+			def xml = request.XML
 			Usuario usuario = Usuario.findByEmailAndPassword(xml.email,xml.password)
 			if(usuario)
 			{
@@ -174,6 +185,7 @@ class UsuarioController {
 			}
 			else
 			{
+				log.error ("El Login :" + usuario.nickname + " y/o Password :" + usuario.password + " son invalidos")
 				render new RespuestaServidor(mensaje:"Login y/o password invalidos",fecha:new Date(),datos: false) as XML
 			}
 		}
@@ -183,11 +195,11 @@ class UsuarioController {
 	{
 		if(request.method != "PUT")
 		{
+			log.error ("Peticion no permitida " + request.method + " en modificarUsuario")
 			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida",fecha: new Date(),datos:false) as XML
 		}
 		else
 		{
-			//Usuario usuario = verificarXML()
 			validarRegistro(verificarXML())
 		}
 	}
@@ -195,9 +207,8 @@ class UsuarioController {
 	def verificarXML()
 	{
 		try
-		{
-			
-			def xml = request.XML			
+		{		
+			def xml = request.XML
 			def usuario = Usuario.findByEmail(xml.email)
 			if(usuario!=null)
 			{
@@ -217,24 +228,28 @@ class UsuarioController {
 					}
 					else
 					{
+						log.error ("El usuario '" + usuario.nickname + "' no ha iniciado sesion, imposible procesar solicitud")
 						render new RespuestaServidor(mensaje:"No ha iniciado sesion, imposible procesar solicitud",fecha:new Date(),datos: false) as XML
 					}
 				}
 				else
 				{
+					log.error ("El usuario '" + usuario.nickname + "' ya ha desactivado su cuenta")
 					render new RespuestaServidor(mensaje:"El usuario "+usuario.email+" ha desactivado su cuenta.",fecha:new Date(),datos: false) as XML
 				}
 			}
 			else
 			{
+				log.error ("No hay recursos encontrados en verificarXML")
 				render new RespuestaServidor(mensaje:"No hay recursos encontrados",fecha:new Date(),datos: false) as XML
 			}
 		}
 		catch(Exception)
 		{
+			log.error ("Error en recepcion de archivo XML verificarXML")
 			render "Error en recepcion de archivo XML"
 			return null
 		}
-	}	
+	}
 	
 }
