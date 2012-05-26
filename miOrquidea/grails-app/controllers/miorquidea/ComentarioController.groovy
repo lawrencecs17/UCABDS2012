@@ -30,6 +30,7 @@ class ComentarioController {
 	/**
 	* Metodo encargado de Registrar Comentarios en Persistencia
 	* Debe ser solicitado mediante una peticion POST
+	* ....
 	*/
 	def crearComentario ={
 		
