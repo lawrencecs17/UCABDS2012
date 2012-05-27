@@ -35,7 +35,7 @@ class Comentario {
     }
 	
 	static mapping = {
-		sort fecha:   "asc"
+		sort fecha:   "desc"
 	}
 	/**
 	* Persistencia almacenada en una base de datos MongoDB
