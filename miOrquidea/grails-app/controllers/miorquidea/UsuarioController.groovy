@@ -101,7 +101,7 @@ class UsuarioController {
 				/**
 				 * La petición ha sido completada y ha resultado en la creación de un nuevo recurso
 				 */
-				response.status = 201  
+				response.status = 201   
 				render usuario as XML
 			}
 			else
