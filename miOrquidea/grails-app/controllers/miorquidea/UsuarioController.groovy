@@ -98,12 +98,20 @@ class UsuarioController {
 		{
 			if(usuario.save(flush:true))
 			{
-				response.status = 201 // La petición ha sido completada y ha resultado en la creación de un nuevo recurso
+				/**
+				 * La petición ha sido completada y ha resultado en la creación de un nuevo recurso
+				 */
+				response.status = 201  
 				render usuario as XML
 			}
 			else
 			{
-				log.error ("Error en datos de entrada, datos duplicados o formato incorrecto de entrada validarRegistro")
+				/**
+				 * La petición NO ha sido completada, por data duplicado o formato
+				 * de los campos incorrecto
+				 */
+				response.status = 409
+				log.error ("Error en datos de entrada, datos duplicados o formato incorrecto de entrada validarRegistro")				
 				render new RespuestaServidor(mensaje:"Error en datos de entrada, datos duplicados o formato incorrecto de entrada",fecha:new Date(),datos: false) as XML
 			}
 		}
