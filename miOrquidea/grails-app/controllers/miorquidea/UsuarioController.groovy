@@ -110,7 +110,6 @@ class UsuarioController {
 				 * La petición NO ha sido completada, por data duplicado o formato
 				 * de los campos incorrecto
 				 */
-				response.status = 409
 				log.error ("Error en datos de entrada, datos duplicados o formato incorrecto de entrada validarRegistro")				
 				render new RespuestaServidor(mensaje:"Error en datos de entrada, datos duplicados o formato incorrecto de entrada",fecha:new Date(),datos: false) as XML
 			}
