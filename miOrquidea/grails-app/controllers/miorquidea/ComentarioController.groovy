@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 class ComentarioController {
 
 	RespuestaServidor respuesta
+	CalificacionServidor cantidadCalificacion
 	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
 	
 	def index() {
@@ -640,7 +641,7 @@ class ComentarioController {
 	   {
 		   if(Comentario.list())
 		   {
-			   render Comentario.list() as XML
+			   render Comentario.findAllByPrincipal(true) as XML
 		   }
 		   else
 		   {
@@ -677,8 +678,9 @@ class ComentarioController {
 					   {
 						   cantidad ++
 					   }
-					   render new RespuestaServidor(mensaje:"Este comentario tiene " + cantidad + " comentados",
-						   fecha:new Date(),datos: false) as XML
+					   render new CalificacionServidor(Comentados: cantidad) as XML
+					   /*render new RespuestaServidor(mensaje:"Este comentario tiene " + cantidad + " comentados",
+						   fecha:new Date(),datos: false) as XML*/
 				   }
 			   }
 			   else

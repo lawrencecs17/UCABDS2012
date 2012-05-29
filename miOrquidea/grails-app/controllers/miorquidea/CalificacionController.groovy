@@ -6,6 +6,7 @@ import org.apache.commons.logging.*
 class CalificacionController {
 
 	RespuestaServidor respuesta
+	CalificacionServidor cantidadCalificacion
 	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
 	 
 	def index ={
@@ -420,9 +421,10 @@ class CalificacionController {
 				   dislike.each {
 					   cantidadDislike ++
 				   }
-				   render new RespuestaServidor(mensaje:"Este comentario tiene " + cantidadLike + " like y " +
+				   render new CalificacionServidor(Like: cantidadLike , Dislike: cantidadDislike) as XML
+				   /*render new RespuestaServidor(mensaje:"Este comentario tiene " + cantidadLike + " like y " +
 						   cantidadDislike + " dislike",
-					   fecha:new Date(),datos: false) as XML
+					   fecha:new Date(),datos: false) as XML*/
 			   }
 			   else
 			   {
