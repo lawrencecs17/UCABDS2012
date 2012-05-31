@@ -428,7 +428,7 @@ class CalificacionController {
 			   }
 			   else
 			   {
-				   log.error ("El comentario id=" + params.idComentario + "no tiene calificaciones")
+				   log.debug ("El comentario id= " + params.idComentario + "no tiene calificaciones")
 				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 						  fecha:new Date(),datos: false) as XML
 			   }

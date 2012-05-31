@@ -25,7 +25,7 @@ class ComentarioController {
 
 	RespuestaServidor respuesta
 	CalificacionServidor cantidadCalificacion
-	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	private static Log log = LogFactory.getLog("Logs."+ComentarioController.class.getName())
 	
 	def index() {
 		redirect(action: "listarTodos")

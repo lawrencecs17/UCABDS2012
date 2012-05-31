@@ -7,7 +7,7 @@ import grails.converters.XML
 class EtiquetaController {
  
 	RespuestaServidor respuesta
-	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	private static Log log = LogFactory.getLog("Logs."+EtiquetaController.class.getName())
 	
 	def index() {
 		redirect(action: "listarTodos")

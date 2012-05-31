@@ -5,7 +5,7 @@ import org.apache.commons.logging.*
 
 class UsuarioController {
 	
-	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	private static Log log = LogFactory.getLog("Logs."+UsuarioController.class.getName())
 
 	def index ={
 		

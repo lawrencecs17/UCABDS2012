@@ -14,7 +14,7 @@ import org.apache.commons.logging.*
 
 class TokenController {
 
-	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	private static Log log = LogFactory.getLog("Logs."+TokenController.class.getName())
 	
 	def index = {
 			redirect(action:"list")
