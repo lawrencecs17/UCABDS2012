@@ -284,4 +284,76 @@ class UsuarioController {
 		}
 	}
 	
+	def uploadFile ={
+		
+		if(request.method != "POST")
+		{
+			log.error ("Peticion no permitida " + request.method + " en uploadFile")
+			render  new RespuestaServidor(mensaje:"Tipo de peticion no permitida " + request.method,
+						fecha: new Date(),datos:false) as XML
+		}
+		else
+		{
+		   try
+		   {
+			   if(params.email!=null)
+			   {
+				   Usuario usuario = null
+				   usuario = Usuario.findByEmail(params.email)	  
+				   
+				   
+				   if(usuario)
+				   {
+					   if(Token.tokenValido(usuario, request.getRemoteAddr()))
+					   {
+						   extraerArchivo(usuario)
+						  
+					   }
+					   else
+					   {
+						   log.info ("La sesion del usuario '" + usuario.nickname+ "'" + " a expirado")
+						   render  new RespuestaServidor(mensaje:"Su sesion a expirado, debe iniciar sesion para subir el archivo",fecha: new Date(),datos:false) as XML
+					   }
+					  
+				   }
+				   else
+				   {
+					   log.info ("Recurso no encontrado no se puede adjuntar archivo")
+					  render  new RespuestaServidor(mensaje:"Recurso no encontrado no se puede adjuntar archivo ",fecha: new Date(),datos:false) as XML
+				   }
+				   
+			   }
+			   else
+			   {
+				   log.info ("Datos entradas incompletos")
+				   render  new RespuestaServidor(mensaje:"Datos entradas incompletos ",fecha: new Date(),datos:false) as XML
+			   }
+		   }
+		   catch(Exception)
+		   {
+			   log.error ("Ocurrio un error al procesar los datos de entrada")
+			   render  new RespuestaServidor(mensaje:"Ocurrio un error al procesar los datos de entrada ",fecha: new Date(),datos:false) as XML
+		   }
+		}
+	}
+	def extraerArchivo(Usuario usuario)
+	{
+	   try
+	   { 
+				 File miPath = new File("$params.path")
+				 String nombreArchivo = request.getFile(params.archivo).getOriginalFilename()
+				 miPath.mkdirs()
+				 def archivo = request.getFile(params.archivo)
+				 archivo.transferTo(new File("$params.path/${usuario.nickname}.png"))
+				 render miPath.absolutePath					  
+				 
+			
+	   }
+	   catch(Exception)
+	   {
+		   log.error ("Error al procesar archivo adjunto")
+		   render  new RespuestaServidor(mensaje:"Error al procesar archivo adjunto",fecha: new Date(),datos:false) as XML
+	   }
+	}
+	
 }
