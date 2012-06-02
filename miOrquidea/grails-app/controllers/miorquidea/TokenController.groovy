@@ -175,6 +175,41 @@ class TokenController {
 		}
 	}
 	
+	/**
+	 * Metodo para verificar si el token de un usuario 
+	 * se vencio
+	 */
+	def verificarValidezToken() {
+		try {
+				Usuario usuario = null
+				usuario = Usuario.findByEmail(params.email)
+				
+				
+				if (usuario)
+				{
+					
+					if (Token.tokenValido(usuario, request.getRemoteAddr()))
+					{
+						render new RespuestaToken(valido:"Si") as XML
+						
+					}
+					else
+					{
+						render new RespuestaToken(valido:"No") as XML
+					}
+				}
+				else 
+				{
+					render new RespuestaServidor(mensaje:"El usuario $params.email no existe",fecha:new Date(),datos: false) as XML
+				
+				}
+		}
+		catch(Exception ){
+			render new RespuestaServidor(mensaje:"Se ha generado una Excepcion consultar el token ",fecha:new Date(),datos: false) as XML
+			
+		}
+	}
+	
 	def anularToken()
 	{
 		try
