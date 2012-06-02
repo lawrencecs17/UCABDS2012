@@ -5,7 +5,7 @@ import org.apache.commons.logging.*
 
 class UsuarioController {
 	
-	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	private static Log log = LogFactory.getLog("Logs."+UsuarioController.class.getName())
 
 	def index ={
 		
@@ -36,6 +36,31 @@ class UsuarioController {
 				render new RespuestaServidor(mensaje:"No hay recursos encontrados",fecha:new Date(),datos: false) as XML
 			}
 		}
+	}
+	
+	/**
+	 * Consultar un usuario
+	 */
+	def consultaUnUsuario = {
+		
+		try
+		{
+			Usuario miUsuario = Usuario.findByEmailAndPassword(params.email,params.password)
+			if(miUsuario)
+			{
+				render miUsuario as XML
+			}
+			else
+			{
+				render  new RespuestaServidor(mensaje:"Login y/o password invalidos",fecha: new Date(),datos:false) as XML
+				
+			}
+		}
+		catch(Exception)
+		{
+			render  new RespuestaServidor(mensaje:"Error en transmision de datos a miOrquidea App",fecha: new Date(),datos:false) as XML
+		}
+		
 	}
 	
 	/**

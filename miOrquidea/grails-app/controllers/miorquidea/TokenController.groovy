@@ -14,7 +14,7 @@ import org.apache.commons.logging.*
 
 class TokenController {
 
-	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	private static Log log = LogFactory.getLog("Logs."+TokenController.class.getName())
 	
 	def index = {
 			redirect(action:"list")
@@ -114,7 +114,7 @@ class TokenController {
 		}
 		else
 		{
-			log.error ("El Login :" + usuario.nickname + " y/o Password :" + usuario.password + " son invalidos")
+			log.error ("El Login y/o Password : son invalidos")
 			render new RespuestaServidor(mensaje:"Login y/o Password invalidos",fecha:new Date(),datos: false) as XML
 		}
 	}

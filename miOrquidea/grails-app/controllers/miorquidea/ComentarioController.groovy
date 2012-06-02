@@ -25,7 +25,7 @@ class ComentarioController {
 
 	RespuestaServidor respuesta
 	CalificacionServidor cantidadCalificacion
-	private static Log log = LogFactory.getLog("Logs."+CalificacionController.class.getName())
+	private static Log log = LogFactory.getLog("Logs."+ComentarioController.class.getName())
 	
 	def index() {
 		redirect(action: "listarTodos")
@@ -334,9 +334,9 @@ class ComentarioController {
 	   }
 	   else
 	   {
-		   def usuario = Usuario.findByNicknameAndActivo(xml.usuario.text(), true)
+		   def usuario = Usuario.findByNicknameAndActivo(params.usuario, true)
 		   def comentario = Comentario.get(params.idComentario)
-		   def comentarioUsuarios = Comentario.findByAutorAndPrincipal(Usuario.get(params.idUsuario), true)
+		   def comentarioUsuarios = Comentario.findByAutorAndPrincipal(Usuario.get(usuario.id), true)
 		   boolean eliminar
 		   if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 		   {
