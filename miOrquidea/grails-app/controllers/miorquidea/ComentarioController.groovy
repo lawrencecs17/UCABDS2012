@@ -463,7 +463,7 @@ class ComentarioController {
 			   def usuario = Usuario.findByNicknameAndActivo(params.usuario, true)
 			   if (usuario)
 			   {
-				   def comentario = Comentario.findAllByAutor(Usuario.get(usuario.id))
+				   def comentario = Comentario.findAllByAutorAndPrincipal(Usuario.get(usuario.id), true)
 				   if(comentario)
 				   {
 					   render comentario as XML
