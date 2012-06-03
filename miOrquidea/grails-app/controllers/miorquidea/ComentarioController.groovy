@@ -507,7 +507,7 @@ class ComentarioController {
 	   {
 		   try
 		   {
-			   def comentario = Comentario.find(Comentario.get(params.idComentario))
+			   def comentario = Comentario.findAll(Comentario.get(params.idComentario))
 			   if(comentario)
 			   {
 				   render comentario as XML
