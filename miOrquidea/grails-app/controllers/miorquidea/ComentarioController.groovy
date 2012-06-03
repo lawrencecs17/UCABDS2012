@@ -571,8 +571,8 @@ class ComentarioController {
 		   }
 		   catch(Exception)
 		   {
-			   log.error ("No hay recursos encontrados en listarPorEtiqueta")
-			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
+			   log.error ("La etiqueta no existe")
+			   render new RespuestaServidor(mensaje:"La etiqueta no existe",
 						   fecha:new Date(),datos: false) as XML
 		   }
 	   }
