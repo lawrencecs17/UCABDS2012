@@ -544,7 +544,7 @@ class ComentarioController {
 	   {
 		   try
 		   {
-			  def etiqueta = Etiqueta.get(params.idEtiqueta)
+			  def etiqueta = Etiqueta.findByNombre(params.nombre)
 			  def comentario = Comentario.findAll()
 			  List<Comentario> listaComentario = []
 			  comentario.each{
