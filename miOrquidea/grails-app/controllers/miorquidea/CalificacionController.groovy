@@ -156,8 +156,8 @@ class CalificacionController {
 					}
 					else
 					{
-						log.info ("No se encuentra calificaciones con el usuario '" + params.usuario + "' " +
-							"y comentario id=" + params.comentario)
+						//log.info ("No se encuentra calificaciones con el usuario '" + params.usuario + "' " +
+						//	"y comentario id=" + params.comentario)
 						render new RespuestaServidor(mensaje:"No hay recursos encontrados",
 							fecha:new Date(),datos: false) as XML
 					}
