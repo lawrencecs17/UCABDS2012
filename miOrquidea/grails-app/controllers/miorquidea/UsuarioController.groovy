@@ -98,7 +98,7 @@ class UsuarioController {
 			usuario.nickname = xml.nickname
 			usuario.password = xml.password
 			usuario.biografia = xml.biografia
-			usuario.fechaRegistro = new Date()
+			usuario.fechaRegistro = xml.fechaRegistro
 			usuario.email = xml.email
 			usuario.pais = xml.pais
 			usuario.activo = true

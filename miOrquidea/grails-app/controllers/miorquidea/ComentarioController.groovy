@@ -379,7 +379,7 @@ class ComentarioController {
 			   else
 			   {
 				   log.info ("No hay recursos encontrados con el comentario id=" + params.idComentario)
-				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
+				   render new RespuestaServidor(mensaje:"El Comentario no existe",
 						   fecha:new Date(),datos: false) as XML
 			   }
 		   }
@@ -515,14 +515,14 @@ class ComentarioController {
 			   else
 			   {
 				   log.info ("No hay recursos encontrados con el comentario id=" + params.idComentario)
-				   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
+				   render new RespuestaServidor(mensaje:"El comentario no existe",
 						   fecha:new Date(),datos: false) as XML
 			   }
 		   }
 		   catch(Exception)
 		   {
 			   log.error ("No hay recursos encontrados en listarPorComentario")
-			   render new RespuestaServidor(mensaje:"No hay recursos encontrados",
+			   render new RespuestaServidor(mensaje:"No hay recursos encontrados2",
 						   fecha:new Date(),datos: false) as XML
 		   }
 	   }
