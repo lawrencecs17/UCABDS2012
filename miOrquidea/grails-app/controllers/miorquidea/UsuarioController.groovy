@@ -1,6 +1,7 @@
 package miorquidea
 
 import grails.converters.XML
+import java.text.SimpleDateFormat
 import org.apache.commons.logging.*
 
 class UsuarioController {
@@ -93,12 +94,14 @@ class UsuarioController {
 		{
 			def usuario = new Usuario()
 			def xml = request.XML
+			String fecha = xml.fechaRegistro.text()
+			
 			usuario.nombre = xml.nombre
 			usuario.apellido = xml.apellido
 			usuario.nickname = xml.nickname
 			usuario.password = xml.password
 			usuario.biografia = xml.biografia
-			usuario.fechaRegistro = xml.fechaRegistro
+			usuario.fechaRegistro = Date.parse("yy-MM-dd", fecha)
 			usuario.email = xml.email
 			usuario.pais = xml.pais
 			usuario.activo = true
