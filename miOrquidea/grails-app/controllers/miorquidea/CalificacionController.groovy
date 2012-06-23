@@ -48,6 +48,7 @@ class CalificacionController {
 	*/
 	def listarPorComentario ={
 				
+		log.info ("listarPorComentario")
 		if(request.method !="GET")
 		{
 			log.error ("Peticion no permitida " + request.method + " en listarPorComentario")
@@ -62,6 +63,7 @@ class CalificacionController {
 				
 				if(calificacion)
 				{
+					log.info ("retornando la listarPorComentario del comentario " + params.comentario)
 					render calificacion as XML
 				}
 				else
@@ -85,7 +87,8 @@ class CalificacionController {
 	* Debe ser solicitado mediante una peticion GET
 	*/
 	def listarPorUsuario ={
-				
+		
+		log.info ("listarPorUsuario")
 		if(request.method !="GET")
 		{
 			log.error ("Peticion no permitida " + request.method + " en listarPorUsuario")
@@ -103,6 +106,7 @@ class CalificacionController {
 				
 					if(calificacion)
 					{
+						log.info ("retornando la listarPorComentario del comentario " + params.usuario)
 						render calificacion as XML
 					}
 					else
@@ -134,7 +138,8 @@ class CalificacionController {
 	* Debe ser solicitado mediante una peticion GET
 	*/
 	def listarPorUsuarioComentario ={
-				
+		
+		log.info ("listarPorUsuarioComentario")
 		if(request.method !="GET")
 		{
 			log.error ("Peticion no permitida " + request.method + " en listarPorUsuarioComentario")
@@ -152,6 +157,7 @@ class CalificacionController {
 				
 					if(calificacion)
 					{
+						log.info ("retornando la listarPorUsuarioComentario del comentario " + params.usuario + " y usuario " + params.usuario)
 						render calificacion as XML
 					}
 					else
@@ -185,6 +191,7 @@ class CalificacionController {
 	*/
 	def crearCalificacion ={
 		
+		log.info ("crearCalificacion")
 		if(request.method != "POST")
 		{
 			log.error ("Peticion no permitida " + request.method + " en crearCalificacion")
@@ -193,6 +200,7 @@ class CalificacionController {
 		}
 		else
 		{
+			log.info ("crearCalificacion: procesarXmlCalificacion()")
 			procesarXmlCalificacion()
 		}
 	}
@@ -203,14 +211,16 @@ class CalificacionController {
 	*/
 	def procesarXmlCalificacion ={
 	   
+	   log.info ("procesarXmlCalificacion")
 	   try
 	   {
 		   def xml = request.XML
 		   def usuario = Usuario.findByNicknameAndActivo(xml.persona.text(), true)
 		   if (usuario)
 		   {
+			   log.info ("procesarXmlCalificacion: persona " + xml.persona.text())
 				   if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
-				{
+				   {
 					if(!Calificacion.findByPersonaAndComentario(Usuario.get(usuario.id) , Comentario.get(xml.comentario.@id.text())))
 					{
 						def calificacionInstance = new Calificacion(like: xml.like.text() , dislike: xml.dislike.text() )
@@ -254,12 +264,14 @@ class CalificacionController {
    */
    def validarCalificacion(Calificacion calificacion)
    {
+	   log.info ("validarCalificacion(Calificacion calificacion)")
 	   try
 	   {
 		   if (!validarCalificacionDatos(calificacion.like , calificacion.dislike))
 		   {
 				if (calificacion.save(flush: true))
 				{
+					log.info ("se creo la calificacion")
 					render calificacion as XML
 				}
 				else
@@ -302,6 +314,7 @@ class CalificacionController {
    */
    def modificarCalificacion()
    {
+	   log.info ("modificarCalificacion")
 	   if(request.method != "PUT")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en modificarCalificacion")
@@ -310,6 +323,7 @@ class CalificacionController {
 	   }
 	   else
 	   {
+		   log.info ("modificarCalificacion: verificarXmlModificar()")
 		   verificarXmlModificar()
 	   }
    }
@@ -339,12 +353,15 @@ class CalificacionController {
    * de CALIFICACION para modificar
    */
    def verificarXmlModificar = {
+	   
+	   log.info ("verificarXmlModificar")
 	   try
 	   {
 		   def xml = request.XML
 		   def usuario = Usuario.findByNicknameAndActivo(xml.persona.text(), true)
 		   if (usuario)
 		   {
+			   log.info ("verificarXmlModificar de la persona " + xml.persona.text())
 			   if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 			   {
 				   def calificacion = Calificacion.findByComentarioAndPersona(Comentario.get(xml.comentario.@id.text()), Usuario.get(usuario.id))
@@ -390,6 +407,8 @@ class CalificacionController {
 	* Debe ser solicitado mediante una peticion GET
 	*/
    def consultarLikeDislile = {
+	   
+	   log.info ("consultarLikeDislile")
 	   if(request.method !="GET")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en consultarLikeDislile")

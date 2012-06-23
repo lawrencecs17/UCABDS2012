@@ -19,6 +19,7 @@ class EtiquetaController {
 	*/
     def listarTodos ={
         		
+		log.info ("listarTodos Etiqueta")
 		if(request.method !="GET")
 		{			
 			log.error ("Peticion no permitida " + request.method + " en listarTodos")
@@ -28,7 +29,8 @@ class EtiquetaController {
 		else
 		{
 			if(Etiqueta.list())
-			{			
+			{		
+				log.info ("retornando todas las Etiqueta")
 				render Etiqueta.list() as XML
 			}
 			else

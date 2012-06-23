@@ -6,7 +6,7 @@ import org.apache.commons.logging.*
 
 class UsuarioController {
 	
-	private static Log log = LogFactory.getLog("Logs."+UsuarioController.class.getName())
+	private static Log log = LogFactory.getLog("Logs2."+UsuarioController.class.getName())
 
 	def index ={
 		
@@ -49,16 +49,19 @@ class UsuarioController {
 			Usuario miUsuario = Usuario.findByEmailAndPassword(params.email,params.password)
 			if(miUsuario)
 			{
+				log.info ("consultaUnUsuario con email = " + params.email + " y password " + params.password )
 				render miUsuario as XML
 			}
 			else
 			{
+				log.error ("consultaUnUsuario: Login y/o password invalidos con email = " + params.email + " y password " + params.password )
 				render  new RespuestaServidor(mensaje:"Login y/o password invalidos",fecha: new Date(),datos:false) as XML
 				
 			}
 		}
 		catch(Exception)
 		{
+			log.error ("consultaUnUsuario: Error en transmision de datos a miOrquidea App" )
 			render  new RespuestaServidor(mensaje:"Error en transmision de datos a miOrquidea App",fecha: new Date(),datos:false) as XML
 		}
 		
@@ -71,6 +74,7 @@ class UsuarioController {
 	
 	def registrarUsuario = {
 		
+		log.info ("registrarUsuario")
 		if(request.method != "POST")
 		{
 			log.error ("Peticion no permitida " + request.method + " en registrarUsuario")
@@ -90,6 +94,7 @@ class UsuarioController {
 	
 	def procesarXML()
 	{
+		log.info ("procesarXML")
 		try
 		{
 			def usuario = new Usuario()
@@ -105,6 +110,9 @@ class UsuarioController {
 			usuario.email = xml.email
 			usuario.pais = xml.pais
 			usuario.activo = true
+			
+			log.info ("nombre= "+ xml.nombre + " apellido= " + xml.apellido + " nickanem= " + xml.nickname + " password= " + xml.password + " biografia= " + xml.biografia + " fecha= " + Date.parse("yy-MM-dd", fecha) + " email= " + xml.email + " pais= " + xml.pais)
+			
 			return usuario
 		}
 		catch(Exception)
@@ -122,14 +130,17 @@ class UsuarioController {
 	
 	def validarRegistro(Usuario usuario)
 	{
+		log.info ("validarRegistro")
 		try
 		{
+			
 			if(usuario.save(flush:true))
 			{
 				/**
 				 * La petición ha sido completada y ha resultado en la creación de un nuevo recurso
 				 */
 				response.status = 201   
+				log.info ("validarRegistro usuario creado")
 				render usuario as XML
 			}
 			else
@@ -163,6 +174,7 @@ class UsuarioController {
 		}
 		else
 		{
+			log.info ("eliminarUsuario")
 			Usuario usuario = Usuario.findByEmailAndPassword(params.email,params.password)
 			if(usuario)
 			{
@@ -172,6 +184,7 @@ class UsuarioController {
 					{
 						usuario.activo = false
 						usuario.save()
+						log.info "El usuario '" + usuario.nickname + "' ya ha desactivado su cuenta"
 						render usuario as XML
 					}
 					else
@@ -182,7 +195,7 @@ class UsuarioController {
 				}
 				else
 				{
-					log.error ("El usuario '" + usuario.nickname + "' ya ha desactivado su cuenta")
+					log.info "El usuario '" + usuario.nickname + "' ya ha desactivado su cuenta"
 					render new RespuestaServidor(mensaje:"El usuario "+usuario.email+" ya ha desactivado su cuenta",fecha:new Date(),datos: false) as XML
 				}
 			}
@@ -196,6 +209,7 @@ class UsuarioController {
 	
 	def activarUsuario()
 	{
+		log.info("activarUsuario")
 		if(request.method !="PUT")
 		{
 			log.error ("Peticion no permitida " + request.method + " en activarUsuario")
@@ -209,10 +223,12 @@ class UsuarioController {
 			{
 				if(usuario.activo)
 				{
+					log.info("activarUsuario: El usuario "+usuario.email+" ya tiene activa su cuenta")
 					render new RespuestaServidor(mensaje:"El usuario "+usuario.email+" ya tiene activa su cuenta",fecha:new Date(),datos: false) as XML
 				}
 				else
 				{
+					log.info("activarUsuario: se ha activo el usuario " +usuario.email)
 					usuario.activo = true
 					usuario.save()
 					render usuario as XML
@@ -228,6 +244,7 @@ class UsuarioController {
 	
 	def modificarUsuario()
 	{
+		log.info("modificarUsuario")
 		if(request.method != "PUT")
 		{
 			log.error ("Peticion no permitida " + request.method + " en modificarUsuario")
@@ -235,12 +252,14 @@ class UsuarioController {
 		}
 		else
 		{
+			log.info("modificarUsuario: validarRegistro")
 			validarRegistro(verificarXML())
 		}
 	}
 	
 	def verificarXML()
 	{
+		log.info("verificarXML")
 		try
 		{		
 			def xml = request.XML
@@ -258,6 +277,8 @@ class UsuarioController {
 						usuario.biografia = xml.biografia
 						usuario.email = xml.email2
 						usuario.pais = xml.pais
+						
+						log.info ("nombre= "+ xml.nombre + " apellido= " + xml.apellido + " nickanem= " + xml.nickname + " password= " + xml.password + " biografia= " + xml.biografia + " email= " + xml.email2 + " pais= " + xml.pais)
 						
 						return usuario
 					}
@@ -289,6 +310,7 @@ class UsuarioController {
 	
 	def uploadFile ={
 		
+		log.info("uploadfile")
 		if(request.method != "POST")
 		{
 			log.error ("Peticion no permitida " + request.method + " en uploadFile")

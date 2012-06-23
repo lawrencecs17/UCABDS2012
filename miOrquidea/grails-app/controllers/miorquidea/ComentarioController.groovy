@@ -37,6 +37,7 @@ class ComentarioController {
 	*/
 	def crearComentario ={
 		
+		log.info ("crearComentario")
 		if(request.method != "POST")
 		{
 			log.error ("Peticion no permitida " + request.method + " en crearComentario")
@@ -45,6 +46,7 @@ class ComentarioController {
 		}
 		else
 		{
+			log.info ("crearComentario procesarXmlComentario()")
 			procesarXmlComentario()
 		}
 	}
@@ -55,6 +57,7 @@ class ComentarioController {
 	*/
 	def crearComentado ={
 		
+		log.info ("crearComentado")
 		if(request.method != "POST")
 		{
 			log.error ("Peticion no permitida " + request.method + " en crearComentado")
@@ -63,6 +66,7 @@ class ComentarioController {
 		}
 		else
 		{
+			log.info ("crearComentado procesarXmlComentado()")
 			procesarXmlComentado()
 		}
 	}
@@ -72,6 +76,8 @@ class ComentarioController {
 	* de COMENTARIO
 	*/
 	def procesarXmlComentario ={
+		
+		log.info ("procesarXmlComentario")
 		try
 		{
 			def today= new Date()
@@ -79,6 +85,7 @@ class ComentarioController {
 			def usuario = Usuario.findByNicknameAndActivo(xml.autor.text(), true)
 			if (usuario)
 			{
+				log.info ("procesarXmlComentario usuario = " + xml.autor.text())
 				if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 				{
 					if (xml.mensaje.text())
@@ -139,6 +146,8 @@ class ComentarioController {
 	* de COMENTARIO comentado
 	*/
 	def procesarXmlComentado ={
+		
+		log.info ("procesarXmlComentado")
 		try
 		{
 		   def xml = request.XML
@@ -147,6 +156,7 @@ class ComentarioController {
 		   def usuario = Usuario.findByNicknameAndActivo(xml.autorComentado.text(), true)
 		   if (usuario)
 		   {
+			   log.info ("procesarXmlComentado autorComentario = " + xml.autorComentado.text())
 			   if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 			   {
 				   if (xml.mensaje.text())
@@ -216,6 +226,7 @@ class ComentarioController {
 			if (comentario.save(flush: true))
 			{
 				 response.status = 201 // La petición ha sido completada y ha resultado en la creación de un nuevo recurso
+				 log.info ("comentario creado")
 				 //render comentario as XML
 			}
 			else
@@ -239,6 +250,7 @@ class ComentarioController {
 	*/
 	def modificarComentario()
 	{
+		log.info ("modificarComentario")
 		if(request.method != "PUT")
 		{
 			log.error ("Peticion no permitida " + request.method + " en modificarComentario")
@@ -247,6 +259,7 @@ class ComentarioController {
 		}
 		else
 		{
+			log.info ("modificarComentario verificarXmlModificar")
 			verificarXmlModificar()
 		}
 	}
@@ -256,6 +269,8 @@ class ComentarioController {
 	* de COMENTRIO para modificar
 	*/
 	def verificarXmlModificar = {
+		
+		log.info ("verificarXmlModificar")
 		try
 		{
 			def xml = request.XML
@@ -263,6 +278,7 @@ class ComentarioController {
 			def usuario = Usuario.findByNicknameAndActivo(xml.usuario.text(), true)
 			if (usuario)
 			{
+				log.info ("verificarXmlModificar usuario = " + xml.usuario.text())
 				if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 				{
 					if(comentario && usuario)
@@ -326,6 +342,7 @@ class ComentarioController {
    
    def eliminarComentario()
    {
+	   log.info ("eliminarComentario")
 	   if(request.method !="DELETE")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en eliminarComentario")
@@ -397,6 +414,7 @@ class ComentarioController {
    */
    def eliminarComentarioCascada(Comentario comentario, int idComentario)
    {
+	   log.info ("eliminarComentarioCascada")
 	   try
 	   {
 		   comentario.each {
@@ -424,6 +442,7 @@ class ComentarioController {
    */
    def eliminarCalificacion(int idComentario)
    {
+	   log.info ("eliminarCalificacion")
 	   try
 	   {
 		   def calificacion = Calificacion.findAllByComentario(Comentario.get(idComentario))
@@ -449,7 +468,8 @@ class ComentarioController {
    * Debe ser solicitado mediante una peticion GET
    */
    def listarPorUsuario ={
-			   
+			 
+	   log.info ("listarPorUsuario")
 	   if(request.method !="GET")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en listarPorUsuario")
@@ -463,6 +483,7 @@ class ComentarioController {
 			   def usuario = Usuario.findByNicknameAndActivo(params.usuario, true)
 			   if (usuario)
 			   {
+				   log.info ("listarPorUsuario = " + params.usuario)
 				   def comentario = Comentario.findAllByAutorAndPrincipal(Usuario.get(usuario.id), true)
 				   if(comentario)
 				   {
@@ -497,6 +518,7 @@ class ComentarioController {
    */
    def listarPorComentario ={
 			   
+	   log.info ("listarPorUsuario")
 	   if(request.method !="GET")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en listarPorComentario")
@@ -510,6 +532,7 @@ class ComentarioController {
 			   def comentario = Comentario.find(Comentario.get(params.idComentario))
 			   if(comentario)
 			   {
+				   log.info ("listarPorComentario = " + params.idComentario)
 				   render comentario as XML
 			   }
 			   else
@@ -534,6 +557,7 @@ class ComentarioController {
    */
    def listarPorEtiqueta ={
 			   
+	   log.info ("listarPorEtiqueta")
 	   if(request.method !="GET")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en listarPorEtiqueta")
@@ -559,6 +583,7 @@ class ComentarioController {
 			   
 			   if(listaComentario)
 			   {
+				   log.info ("listarPorEtiqueta = " + params.nombre)
 				   render listaComentario as XML
 				   listaComentario.clear()
 			   }
@@ -630,7 +655,8 @@ class ComentarioController {
    * Debe ser solicitado mediante una peticion GET
    */
    def listarTodos ={
-			   
+			  
+	   log.info ("listarTodos")
 	   if(request.method !="GET")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en listarTodos")
@@ -641,6 +667,7 @@ class ComentarioController {
 	   {
 		   if(Comentario.list())
 		   {
+			   log.info ("retornando todos los comentario principales")
 			   render Comentario.findAllByPrincipal(true) as XML
 		   }
 		   else
@@ -657,7 +684,8 @@ class ComentarioController {
    * Debe ser solicitado mediante una peticion GET
    */
    def contarComentados ={
-			   
+			 
+	   log.info ("contarComentados")
 	   if(request.method !="GET")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en contarComentados")
@@ -706,6 +734,7 @@ class ComentarioController {
    */
    def enviarCorreo (String email, String nickname, String mensaje)
    {
+	   log.info ("enviarCorreo")
 	   try
 	   {
 		   sendMail{
@@ -722,6 +751,7 @@ class ComentarioController {
    
    def uploadFile ={
 	   
+	   log.info ("uploadFile")
 	   if(request.method != "POST")
 	   {
 		   log.error ("Peticion no permitida " + request.method + " en uploadFile")
@@ -776,6 +806,7 @@ class ComentarioController {
    
    def extraerArchivo(Usuario usuario, def comentario)
    {
+	   log.info ("extraerArchivo")
 	  try
 	  {
 			if(comentario.autor.id == usuario.id)

@@ -14,7 +14,7 @@ import org.apache.commons.logging.*
 
 class TokenController {
 
-	private static Log log = LogFactory.getLog("Logs."+TokenController.class.getName())
+	private static Log log = LogFactory.getLog("Logs2."+TokenController.class.getName())
 	
 	def index = {
 			redirect(action:"list")
@@ -53,7 +53,7 @@ class TokenController {
 	def iniciarSesion = {
 		
 		def usuario = null
-		
+		log.info ("iniciarSesion")
 		if(request.method !="POST")
 		{
 			log.error ("Peticion no permitida " + request.method + " en iniciarSesion")
@@ -61,6 +61,7 @@ class TokenController {
 		}
 		else
 		{
+			log.info ("asignarToken(procesarXML())")
 			asignarToken(procesarXML())
 		}
 	}
@@ -70,11 +71,13 @@ class TokenController {
 	 */
 	def procesarXML()
 	{
+		log.info ("procesarXML")
 		try
 		{
 			def usuario = null
 			def xml = request.XML
 			usuario = Usuario.findByEmailAndPassword(xml.email,xml.password)
+			log.info ("procesarXML: " + xml.email + " y " + xml.password)
 			return usuario
 			
 		}
@@ -89,6 +92,7 @@ class TokenController {
 	 */
 	def asignarToken(Usuario usuario)
 	{
+		log.info ("asignarToken(Usuario usuario)")
 		if(usuario)
 		{
 			if(usuario.activo)
