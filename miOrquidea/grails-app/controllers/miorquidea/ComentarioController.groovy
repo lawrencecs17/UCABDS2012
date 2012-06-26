@@ -82,12 +82,16 @@ class ComentarioController {
 		{
 			def today= new Date()
 			def xml = request.XML
-			def usuario = Usuario.findByNicknameAndActivo(xml.autor.text(), true)
+			//println(xml.autor.text())
+			Usuario usuario = Usuario.findByNicknameAndActivo(xml.autor.text(), true)
+			println("entreeeee2134123123123")
 			if (usuario)
 			{
+				//println("entreeeeefdfdfdfdfdfdf")
 				log.info ("procesarXmlComentario usuario = " + xml.autor.text())
 				if(Token.tokenValido(Usuario.get(usuario.id), request.getRemoteAddr()))
 				{
+					//println("entreeeee")
 					if (xml.mensaje.text())
 					{
 						def comentarioInstance = new Comentario(mensaje: xml.mensaje.text() , fecha: today )
@@ -153,7 +157,7 @@ class ComentarioController {
 		   def xml = request.XML
 		   def today= new Date()
 		   def comentarioInstance = Comentario.get(xml.comentario.@id.text())
-		   def usuario = Usuario.findByNicknameAndActivo(xml.autorComentado.text(), true)
+		   Usuario usuario = Usuario.findByNicknameAndActivo(xml.autorComentado.text(), true)
 		   if (usuario)
 		   {
 			   log.info ("procesarXmlComentado autorComentario = " + xml.autorComentado.text())
