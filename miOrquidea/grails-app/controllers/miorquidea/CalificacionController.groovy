@@ -215,7 +215,7 @@ class CalificacionController {
 	   try
 	   {
 		   def xml = request.XML
-		   def usuario = Usuario.findByNicknameAndActivo(xml.persona.text(), true)
+		   Usuario usuario = Usuario.findByNicknameAndActivo(xml.persona.text(), true)
 		   if (usuario)
 		   {
 			   log.info ("procesarXmlCalificacion: persona " + xml.persona.text())
